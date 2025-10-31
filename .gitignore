@@ -1,0 +1,10 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore VS Code or system files
+.vscode/
+.DS_Store
+
+# Keep database and CSV files visible on GitHub
+# (So these are NOT hidden)
