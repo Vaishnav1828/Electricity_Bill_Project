@@ -133,4 +133,4 @@ while True:
     else:
         print("⚠️ Invalid choice. Please try again.")
 print("new1 hi")
-git add .
+print("aisygfuksdkfsf")
