@@ -29,4 +29,4 @@ for _, r in df.iterrows():
 
 conn.commit()
 conn.close()
-print("✅ Bills stored successfully (no 'id' column)!")
+print("✅ Bills stored successfully ")
