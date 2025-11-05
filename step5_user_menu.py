@@ -2,11 +2,12 @@ import pandas as pd
 import sqlite3
 from datetime import datetime
 
-# Load CSV
+# --- Load data ---
 df = pd.read_csv("data/cleaned_electricity.csv")
 if "user_id" not in df.columns:
     df["user_id"] = 1
-bills = df.to_dict(orient="records")
+df["amount"] = df.get("amount", df["electricity_kwh"] * 5)
+bills = df.to_dict("records")
 
 
 def valid_date(d):
@@ -16,107 +17,81 @@ def valid_date(d):
     except:
         return False
 
-# ---- 1. View a user's data ----
+# --- 1. View one user's data ---
 
 
 def user_data():
-    uid = int(input("Enter user ID to view: "))
+    uid = int(input("Enter user ID: "))
     print(f"\n📋 Bills for User {uid}:")
     found = False
     for b in bills:
         if b["user_id"] == uid:
-            print(f"Date: {b['date']} | Units: {b['electricity_kwh']} kWh")
+            print(
+                f"Date: {b['date']} | Units: {b['electricity_kwh']} kWh | Amount: ₹{b['amount']:.2f}")
             found = True
     if not found:
         print("❌ No bills found for this user.")
 
-# ---- 2. Add new bill ----
+# --- 2. Add new bill ---
 
 
 def add_bill():
-    uid = int(input("Enter user ID: "))
-    date = input("Enter date (YYYY-MM-DD): ")
+    uid = int(input("User ID: "))
+    date = input("Date (YYYY-MM-DD): ")
     if not valid_date(date):
-        print("❌ Invalid date!")
-        return
-    units = float(input("Enter units: "))
-    bills.append({"user_id": uid, "date": date, "electricity_kwh": units})
+        return print("❌ Invalid date.")
+    units = float(input("Units: "))
+    bills.append({"user_id": uid, "date": date,
+                  "electricity_kwh": units, "amount": units * 5})
     print("✅ Bill added!")
 
-# ---- 3. Show all bills ----
+# --- 3. Show all bills ---
 
 
 def show_bills():
+    print("\n📋 All Electricity Bills:")
     for b in bills:
         print(
-            f"User {b['user_id']} | {b['date']} | {b['electricity_kwh']} kWh")
+            f"User {b['user_id']} | {b['date']} | {b['electricity_kwh']} kWh | ₹{b['amount']:.2f}")
 
-# ---- 4. Modify existing bill ----
-
-
-def modify_bill():
-    uid = int(input("User ID: "))
-    date = input("Date: ")
-    for b in bills:
-        if b["user_id"] == uid and b["date"] == date:
-            b["electricity_kwh"] = float(input("New units: "))
-            print("✅ Bill updated!")
-            return
-    print("❌ Bill not found!")
-
-# ---- 5. Delete a bill ----
+# --- 4. Delete a bill ---
 
 
 def delete_bill():
-    uid = int(input("User ID: "))
-    date = input("Date: ")
+    uid, date = int(input("User ID: ")), input("Date: ")
     for b in bills:
         if b["user_id"] == uid and b["date"] == date:
             bills.remove(b)
-            print("🗑️ Bill deleted!")
-            return
+            return print("🗑️ Bill deleted!")
     print("❌ Bill not found!")
 
-# ---- 6. Save and Exit ----
+# --- 5. Save & Exit ---
 
 
 def save_and_exit():
-    # save to CSV
     pd.DataFrame(bills).to_csv("data/cleaned_electricity.csv", index=False)
-
-    # rebuild DB table cleanly (no 'id' column)
     conn = sqlite3.connect("electricity.db")
     cur = conn.cursor()
     cur.execute("DROP TABLE IF EXISTS bills")
-    cur.execute("""
-        CREATE TABLE bills(
-          user_id INTEGER,
-          month TEXT,
-          units REAL,
-          amount REAL
-        )
-    """)
-    for b in bills:
-        cur.execute("INSERT INTO bills(user_id,month,units,amount) VALUES(?,?,?,?)",
-                    (b["user_id"], b["date"],
-                     b["electricity_kwh"],
-                     b["electricity_kwh"] * 5))
+    cur.execute(
+        "CREATE TABLE bills(user_id INTEGER, month TEXT, units REAL, amount REAL)")
+    cur.executemany("INSERT INTO bills VALUES(?,?,?,?)",
+                    [(b["user_id"], b["date"], b["electricity_kwh"], b["amount"]) for b in bills])
     conn.commit()
     conn.close()
-    print("💾 Saved. Bye!")
+    print("💾 Saved successfully. Exiting...")
 
 
-# ===== MENU =====
+# --- Menu ---
 while True:
     print("\n===== Electricity Bill Menu =====")
     print("1. User Data")
     print("2. Add New Bill")
     print("3. Show All Bills")
-    print("4. Modify Existing Bill")
-    print("5. Delete a Bill")
-    print("6. Save and Exit")
+    print("4. Delete a Bill")
+    print("5. Save and Exit")
 
-    choice = input("\nEnter your choice (1-6): ")
+    choice = input("\nEnter your choice (1–5): ")
 
     if choice == "1":
         user_data()
@@ -125,11 +100,9 @@ while True:
     elif choice == "3":
         show_bills()
     elif choice == "4":
-        modify_bill()
-    elif choice == "5":
         delete_bill()
-    elif choice == "6":
+    elif choice == "5":
         save_and_exit()
         break
     else:
-        print("⚠️ Invalid choice!")
+        print("⚠️ Invalid choice.")
