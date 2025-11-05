@@ -1,7 +1,7 @@
 # step2_create_db.py
 import sqlite3
 
-# Connect to a database file (it will be created automatically)
+# Connect to a database file 
 conn = sqlite3.connect("electricity.db")
 cursor = conn.cursor()
 

@@ -11,7 +11,7 @@ df["amount"] = df["electricity_kwh"] * 5
 conn = sqlite3.connect("electricity.db")
 cur = conn.cursor()
 
-# ---- Drop old table (with id) and recreate clean table ----
+# ---- Drop old table and recreate clean table ----
 cur.execute("DROP TABLE IF EXISTS bills")
 cur.execute("""
 CREATE TABLE bills(
