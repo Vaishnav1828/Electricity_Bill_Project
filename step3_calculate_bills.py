@@ -1,25 +1,32 @@
 import pandas as pd
 import sqlite3
 
-# Step 1: Load the cleaned data
+# Load the cleaned data
 df = pd.read_csv("data/cleaned_electricity.csv")
-
-# Step 2: Calculate bill amount (₹5 per unit)
+if "user_id" not in df.columns:
+    df["user_id"] = 1
 df["amount"] = df["electricity_kwh"] * 5
 
-# Step 3: Connect to the database
+# Connect to database
 conn = sqlite3.connect("electricity.db")
-cursor = conn.cursor()
+cur = conn.cursor()
 
-# Step 4: Insert each row into the 'bills' table
-cursor.execute("DELETE FROM bills")
-cursor.execute("DELETE FROM sqlite_sequence WHERE name='bills'")
-for index, row in df.iterrows():
-    cursor.execute(
-        "INSERT INTO bills (month, units, amount) VALUES (?, ?, ?)",
-        (row["date"], row["electricity_kwh"], row["amount"])
-    )
+# ---- Drop old table (with id) and recreate clean table ----
+cur.execute("DROP TABLE IF EXISTS bills")
+cur.execute("""
+CREATE TABLE bills(
+ user_id INTEGER,
+ month TEXT,
+ units REAL,
+ amount REAL
+)
+""")
+
+# ---- Insert data ----
+for _, r in df.iterrows():
+    cur.execute("INSERT INTO bills(user_id, month, units, amount) VALUES (?, ?, ?, ?)",
+                (r["user_id"], r["date"], r["electricity_kwh"], r["amount"]))
+
 conn.commit()
 conn.close()
-
-print("✅ Bills calculated and stored in the database!")
+print("✅ Bills stored successfully (no 'id' column)!")
