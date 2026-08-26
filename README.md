@@ -29,3 +29,10 @@ It helps calculate, modify, and delete monthly electricity consumption data easi
 2. Navigate to your project folder:  
    ```bash
    cd D:\Electricity_Bill_Project
+   ```
+3. Run the main menu program:
+   ```bash
+   python step5_user_menu.py
+   ```
+
+> **Note:** Update the project path above if you cloned the repository to a different folder.
